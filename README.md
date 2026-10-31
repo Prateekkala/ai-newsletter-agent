@@ -23,7 +23,7 @@ Collect (RSS) -> Dedupe -> Rank (LLM) -> Summarize (LLM) -> Render -> Publish
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-newsletter-agent.git
+git clone https://github.com/Prateekkala/ai-newsletter-agent.git
 cd ai-newsletter-agent
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
