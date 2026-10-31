@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.idea/
+.vscode/
+
+# Raw collected data is regenerated every run
+data/raw/

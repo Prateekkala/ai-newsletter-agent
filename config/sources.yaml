@@ -1,0 +1,43 @@
+# RSS sources for the newsletter.
+# category is used later to group items into newsletter sections.
+# Add or remove feeds freely; a broken feed is logged and skipped.
+
+sources:
+  # --- Research ---
+  - name: arXiv cs.AI
+    url: https://rss.arxiv.org/rss/cs.AI
+    category: research
+  - name: arXiv cs.CL
+    url: https://rss.arxiv.org/rss/cs.CL
+    category: research
+  - name: arXiv cs.LG
+    url: https://rss.arxiv.org/rss/cs.LG
+    category: research
+
+  # --- Labs & model releases ---
+  - name: OpenAI
+    url: https://openai.com/news/rss.xml
+    category: models
+  - name: Google DeepMind
+    url: https://deepmind.google/blog/rss.xml
+    category: models
+  - name: Google AI
+    url: https://blog.google/technology/ai/rss/
+    category: models
+  - name: Hugging Face Blog
+    url: https://huggingface.co/blog/feed.xml
+    category: tools
+  - name: NVIDIA Blog
+    url: https://blogs.nvidia.com/feed/
+    category: industry
+
+  # --- News & industry ---
+  - name: MIT Technology Review (AI)
+    url: https://www.technologyreview.com/topic/artificial-intelligence/feed
+    category: industry
+  - name: The Verge (AI)
+    url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+    category: industry
+  - name: TechCrunch (AI)
+    url: https://techcrunch.com/category/artificial-intelligence/feed/
+    category: industry
