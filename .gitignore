@@ -11,3 +11,4 @@ venv/
 
 # Raw collected data is regenerated every run
 data/raw/
+site/

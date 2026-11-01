@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ainews"
+version = "0.1.0"
+description = "A pipeline that turns RSS feeds into a weekly AI newsletter."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "anthropic>=0.40",
+  "feedparser>=6.0",
+  "httpx>=0.27",
+  "PyYAML>=6.0",
+  "Jinja2>=3.1",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+ainews = "ainews.main:main"
+ainews-site = "ainews.site:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Weekly Archive</title>
+<style>
+  body { margin:0; background:#f4f5f7; color:#1f2933; font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; }
+  main { max-width:680px; margin:0 auto; padding:40px 20px 64px; }
+  h1 { font-size:30px; margin:0 0 6px; }
+  p.lead { color:#4b5563; line-height:1.6; margin:0 0 24px; }
+  a { color:#1d4ed8; }
+  .btn { display:inline-block; background:#1d4ed8; color:#fff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:600; }
+  ul { list-style:none; padding:0; margin:32px 0 0; }
+  li { background:#fff; border-radius:8px; padding:16px 18px; margin-bottom:12px; }
+  li .date { font-weight:600; font-size:17px; }
+  li .meta { color:#6b7280; font-size:13px; margin:2px 0 6px; }
+  li .heads { color:#374151; font-size:14px; line-height:1.5; }
+  footer { margin-top:32px; color:#6b7280; font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>AI Weekly</h1>
+  <p class="lead">A weekly roundup of AI news, built automatically from public RSS feeds by a Python pipeline.</p>
+  {% if latest %}
+  <a class="btn" href="issues/{{ latest.date }}.html">Read the latest issue ({{ latest.date }})</a>
+  {% endif %}
+  <ul>
+  {% for i in issues %}
+    <li>
+      <div class="date"><a href="issues/{{ i.date }}.html">{{ i.date }}</a></div>
+      <div class="meta">{{ i.stories }} stories</div>
+      <div class="heads">{{ i.headlines | join(" · ") }}</div>
+    </li>
+  {% else %}
+    <li>No issues published yet.</li>
+  {% endfor %}
+  </ul>
+  <footer>Source code: <a href="https://github.com/Prateekkala/ai-newsletter-agent">github.com/Prateekkala/ai-newsletter-agent</a></footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,3 @@
+[console_scripts]
+ainews = ainews.main:main
+ainews-site = ainews.site:main

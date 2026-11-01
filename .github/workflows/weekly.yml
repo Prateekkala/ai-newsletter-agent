@@ -1,0 +1,53 @@
+name: Weekly issue
+
+on:
+  schedule:
+    - cron: "30 3 * * 6" # Saturday 09:00 IST (03:30 UTC)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "free = keyword ranking and feed excerpts, ai = Claude ranking and summaries"
+        type: choice
+        options: [free, ai]
+        default: free
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e .
+
+      - name: Generate issue
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODE: ${{ inputs.mode || vars.AINEWS_MODE || 'free' }}
+        run: |
+          if [ "$MODE" = "ai" ]; then
+            ainews --full
+          else
+            ainews --no-llm
+          fi
+
+      - name: Open pull request for review
+        uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: issues/
+          branch: issue/${{ github.run_id }}
+          commit-message: "Add weekly issue"
+          title: "Weekly issue for review"
+          body: |
+            New issue generated automatically. Read `issues/*.md` or the `.html` file,
+            edit anything that looks off, then merge to publish it to the archive site.
+          delete-branch: true

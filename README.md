@@ -1,57 +1,86 @@
 # AI Newsletter Agent
 
-[![CI](https://github.com/YOUR_USERNAME/ai-newsletter-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/ai-newsletter-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/Prateekkala/ai-newsletter-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Prateekkala/ai-newsletter-agent/actions/workflows/ci.yml)
+[![Weekly issue](https://github.com/Prateekkala/ai-newsletter-agent/actions/workflows/weekly.yml/badge.svg)](https://github.com/Prateekkala/ai-newsletter-agent/actions/workflows/weekly.yml)
 
-A Python pipeline that gathers the week's AI news from RSS feeds, removes duplicates, and (in later stages) ranks, summarizes and publishes a weekly newsletter.
+A Python pipeline that gathers the week's AI news from RSS feeds, removes duplicates, picks the most important stories, and publishes a weekly newsletter as Markdown and email-ready HTML. It runs on a schedule with GitHub Actions and publishes an archive site with GitHub Pages.
 
-## Pipeline
+**Live archive:** https://prateekkala.github.io/ai-newsletter-agent/ *(available once GitHub Pages is enabled, see below)*
 
+## How it works
+
+```mermaid
+flowchart LR
+    A[RSS feeds<br/>config/sources.yaml] --> B[Collect]
+    B --> C[Dedupe]
+    C --> D{Mode}
+    D -->|free| E[Keyword ranking<br/>feed excerpts]
+    D -->|ai| F[Claude ranking<br/>and summaries]
+    E --> G[Render]
+    F --> G
+    G --> H[issues/DATE.md<br/>issues/DATE.html]
+    H --> I[Pull request<br/>for review]
+    I --> J[GitHub Pages<br/>archive site]
 ```
-Collect (RSS) -> Dedupe -> Rank (LLM) -> Summarize (LLM) -> Render -> Publish
-   done            done      planned        planned          planned    planned
-```
 
-| Stage | Module | Status |
-|-------|--------|--------|
-| Collect | `src/ainews/collect.py` | Working |
-| Dedupe | `src/ainews/dedupe.py` | Working (URL normalisation + fuzzy title match) |
-| Rank | `src/ainews/rank.py` | Stub |
-| Summarize | `src/ainews/summarize.py` | Stub |
-| Render | `src/ainews/render.py` | Stub |
-| Publish | GitHub Pages + email | Planned |
+| Stage | Module | Notes |
+|-------|--------|-------|
+| Collect | `collect.py` | Parallel RSS fetch; a broken feed is logged and skipped |
+| Dedupe | `dedupe.py` | URL normalisation plus fuzzy title match |
+| Rank | `heuristic.py` / `rank.py` | Free: keyword rules. AI: Claude scores batches as JSON |
+| Summarize | `heuristic.py` / `summarize.py` | Free: feed excerpts. AI: summaries grounded in the article text |
+| Render | `render.py` | Markdown and table-based HTML for email clients |
+| Publish | `site.py` + workflows | Weekly PR for review, then archive site on merge |
 
-## Quick start
+Two modes: **free** needs no API key or cost, and **ai** uses the Claude API for better ranking and summaries (`ANTHROPIC_API_KEY` required).
+
+## Run it yourself
 
 ```bash
 git clone https://github.com/Prateekkala/ai-newsletter-agent.git
 cd ai-newsletter-agent
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+python -m venv .venv
+source .venv/bin/activate        # Windows Git Bash: source .venv/Scripts/activate
+pip install -e ".[dev]"
 
-cp .env.example .env          # API key only needed from the summarize stage onward
-PYTHONPATH=src python -m ainews.main --days 7
+ainews --no-llm                  # free mode
+ainews --full                    # AI mode (needs .env with ANTHROPIC_API_KEY)
+ainews                           # collect + dedupe only, writes data/raw/DATE.json
+ainews-site                      # build the archive site into ./site
 pytest
 ```
 
-Output is written to `data/raw/YYYY-MM-DD.json`.
+Output lands in `issues/YYYY-MM-DD.md` and `issues/YYYY-MM-DD.html`. Open the `.html` file in a browser to see the newsletter, or paste it into an email or newsletter tool.
+
+## Automation
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| `ci.yml` | every push and PR | runs the tests |
+| `weekly.yml` | Saturdays 09:00 IST, or manually | generates an issue and opens a PR for review |
+| `pages.yml` | when `issues/` changes on `main` | builds and deploys the archive site |
+
+One-time setup in your repo settings:
+1. **Settings → Pages → Build and deployment → Source:** GitHub Actions.
+2. **Settings → Actions → General → Workflow permissions:** read and write, and tick *Allow GitHub Actions to create and approve pull requests*.
+3. Optional, for AI mode: add `ANTHROPIC_API_KEY` under **Settings → Secrets and variables → Actions → Secrets**, and set a repository variable `AINEWS_MODE` to `ai`.
+
+Trigger a run any time from the **Actions** tab: *Weekly issue → Run workflow*.
 
 ## Project layout
 
 ```
-ai-newsletter-agent/
-├── .github/workflows/ci.yml   # runs tests on every push/PR
-├── config/sources.yaml        # RSS feeds + categories (edit to add sources)
-├── src/ainews/                # pipeline code
-├── tests/                     # pytest suite
-├── templates/                 # Jinja2 newsletter templates (later)
-├── issues/                    # published issues archive (later)
-├── data/raw/                  # collected items (git-ignored)
-└── docs/                      # architecture notes, design decisions
+.github/workflows/   ci.yml, weekly.yml, pages.yml
+config/sources.yaml  RSS feeds and categories
+prompts/             prompts for ranking, summaries and the intro
+src/ainews/          pipeline code
+templates/           Markdown, HTML and archive index templates
+tests/               pytest suite (no network or API needed)
+issues/              published issues
+docs/                design decisions
 ```
 
 ## Adding a source
-
-Add an entry to `config/sources.yaml`:
 
 ```yaml
 - name: My Favourite Blog
@@ -59,17 +88,17 @@ Add an entry to `config/sources.yaml`:
   category: industry   # research | models | tools | industry
 ```
 
-A broken or slow feed is logged and skipped; it never fails the whole run.
+## Design decisions
+
+See [docs/design-decisions.md](docs/design-decisions.md). In short: a fixed pipeline rather than a free-roaming agent, dedupe before any model call, per-source failure isolation, and a human review step before anything is published.
 
 ## Roadmap
 
-- [x] RSS collection and dedupe
-- [ ] LLM ranking with structured JSON output
-- [ ] Summaries grounded in article text, with source links
-- [ ] Markdown/HTML rendering and `issues/` archive
-- [ ] Weekly GitHub Actions run that opens a PR for human review
-- [ ] GitHub Pages archive site and email delivery
+- [x] RSS collection, dedupe, free and AI modes
+- [x] Markdown and HTML issues, weekly automation, archive site
+- [ ] Email delivery
 - [ ] Evals for ranking and summary quality
+- [ ] More sources and topic-specific editions
 
 ## License
 
